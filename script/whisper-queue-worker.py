@@ -34,7 +34,6 @@ parser.add_argument("--output_dir", "-o",
 args = parser.parse_args().__dict__
 model_name: str = args.pop("model")
 output_dir: str = args.pop("output_dir")
-audio_path: str = args.pop("audio")
 
 os.makedirs(output_dir, exist_ok=True)
 
@@ -52,10 +51,11 @@ quantized_model = torch.quantization.quantize_dynamic(
 
 del model_fp32
 
-result = whisper.transcribe(quantized_model, audio_path, **args)
+for audio_path in args.pop("audio"):
+    result = whisper.transcribe(quantized_model, audio_path, **args)
 
-writer = get_writer("srt", output_dir)
-writer(result, audio_path)
+    writer = get_writer("srt", output_dir)
+    writer(result, audio_path)
 
-writer = get_writer("json", output_dir)
-writer(result, audio_path)
+    writer = get_writer("json", output_dir)
+    writer(result, audio_path)
