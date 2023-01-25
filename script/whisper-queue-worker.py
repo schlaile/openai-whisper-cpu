@@ -6,7 +6,7 @@ import whisper
 import torch
 import os
 from pathlib import Path
-from whisper.utils import write_srt
+from whisper.utils import get_writer
 from whisper.tokenizer import LANGUAGES, TO_LANGUAGE_CODE
 import json
 import time
@@ -34,7 +34,7 @@ parser.add_argument("--output_dir", "-o",
 args = parser.parse_args().__dict__
 model_name: str = args.pop("model")
 output_dir: str = args.pop("output_dir")
-audio_file: str = args.pop("audio")
+audio_path: str = args.pop("audio")
 
 os.makedirs(output_dir, exist_ok=True)
 
@@ -52,17 +52,10 @@ quantized_model = torch.quantization.quantize_dynamic(
 
 del model_fp32
 
-result = whisper.transcribe(quantized_model, audio_file, **args)
+result = whisper.transcribe(quantized_model, audio_path, **args)
 
-# save SRT
-audio_basename = Path(audio_file).stem
-with open(os.path.join(output_dir, audio_basename + ".srt"),
-          "w", encoding="utf-8") as srt:
-    write_srt(result["segments"], file=srt)
-        
-# save JSON
-json_object = json.dumps(result, indent=4)
-with open(os.path.join(output_dir, audio_basename + ".json"),
-          "w", encoding="utf-8") as output:
-    output.write(json_object)
+writer = get_writer("srt", output_dir)
+writer(result, audio_path)
 
+writer = get_writer("json", output_dir)
+writer(result, audio_path)
