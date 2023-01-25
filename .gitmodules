@@ -1,3 +1,4 @@
 [submodule "whisper"]
 	path = whisper
 	url = https://github.com/schlaile/whisper
+	branch = main
